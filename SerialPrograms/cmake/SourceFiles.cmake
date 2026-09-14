@@ -242,6 +242,8 @@ file(GLOB CORE_LIBRARY_SOURCES
     Source/CompileTimeBackends.h
     Source/ControllerInput/ControllerInput.cpp
     Source/ControllerInput/ControllerInput.h
+    Source/ControllerInput/Gamepad/GamepadInput_State.h
+    Source/ControllerInput/Gamepad/GlobalGamepadTracker.h
     Source/ControllerInput/Keyboard/KeyBindingOption.cpp
     Source/ControllerInput/Keyboard/KeyBindingOption.h
     Source/ControllerInput/Keyboard/KeyboardHidButtons.h
@@ -869,8 +871,19 @@ file(GLOB LIBRARY_SOURCES
     Source/ComputerPrograms/Framework/ComputerProgramSession.h
     Source/ComputerPrograms/Framework/ComputerProgramWidget.cpp
     Source/ComputerPrograms/Framework/ComputerProgramWidget.h
+    Source/ConsoleInfra/CommandRowWidget.cpp
+    Source/ConsoleInfra/CommandRowWidget.h
+    Source/ConsoleInfra/ConsoleSystemOption.cpp
+    Source/ConsoleInfra/ConsoleSystemOption.h
+    Source/ConsoleInfra/ConsoleSystemSession.cpp
+    Source/ConsoleInfra/ConsoleSystemSession.h
+    Source/ConsoleInfra/ConsoleSystemWidget.cpp
+    Source/ConsoleInfra/ConsoleSystemWidget.h
+    Source/ConsoleInfra/VirtualConsole.cpp
+    Source/ConsoleInfra/VirtualConsole.h
     Source/ControllerInput/Keyboard/GlobalKeyboardHidTracker.cpp
     Source/ControllerInput/Keyboard/GlobalKeyboardHidTracker.h
+    Source/ControllerInput/Gamepad/GlobalGamepadTracker.cpp
     Source/ControllerInput/Keyboard/GlobalQtKeyMap.cpp
     Source/ControllerInput/Keyboard/GlobalQtKeyMap.h
     Source/ControllerInput/Keyboard/KeyBindingWidget.cpp

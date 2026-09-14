@@ -6,6 +6,7 @@
 
 #include "Common/Cpp/Containers/Pimpl.tpp"
 #include "ControllerInput/ControllerInput.h"
+#include "ControllerInput/Gamepad/GamepadInput_State.h"
 #include "ControllerInput/Keyboard/KeyboardInput_State.h"
 #include "Controllers/ControllerTypes.h"
 #include "Controllers/RumbleListener.h"
@@ -33,7 +34,48 @@ const char RightJoycon::NAME[] = "Nintendo Switch: Right Joycon";
 struct JoyconController::Data{
     ListenerSet<RumbleListener> m_rumble_listeners;
     std::map<KeyboardKey, JoyconDeltas> m_keyboard_mapping;
+    JoyconState m_keyboard_state;
+    JoyconState m_gamepad_state;
 };
+
+
+namespace{
+
+JoyconState gamepad_joycon_state(const GamepadInputState& state, ControllerClass controller_class){
+    JoyconState output;
+    if (controller_class == ControllerClass::NintendoSwitch_LeftJoycon){
+        if (state.pressed(GAMEPAD_DPAD_UP)) output.buttons |= BUTTON_UP;
+        if (state.pressed(GAMEPAD_DPAD_RIGHT)) output.buttons |= BUTTON_RIGHT;
+        if (state.pressed(GAMEPAD_DPAD_DOWN)) output.buttons |= BUTTON_DOWN;
+        if (state.pressed(GAMEPAD_DPAD_LEFT)) output.buttons |= BUTTON_LEFT;
+        if (state.pressed(GAMEPAD_LB)) output.buttons |= BUTTON_L;
+        if (state.left_trigger > 0.25) output.buttons |= BUTTON_ZL;
+        if (state.pressed(GAMEPAD_LCLICK)) output.buttons |= BUTTON_LCLICK;
+        if (state.pressed(GAMEPAD_BACK)) output.buttons |= BUTTON_MINUS;
+        output.joystick = JoystickPosition(state.left_x, state.left_y);
+    }else{
+        if (state.pressed(GAMEPAD_A)) output.buttons |= BUTTON_A;
+        if (state.pressed(GAMEPAD_B)) output.buttons |= BUTTON_B;
+        if (state.pressed(GAMEPAD_X)) output.buttons |= BUTTON_X;
+        if (state.pressed(GAMEPAD_Y)) output.buttons |= BUTTON_Y;
+        if (state.pressed(GAMEPAD_RB)) output.buttons |= BUTTON_R;
+        if (state.right_trigger > 0.25) output.buttons |= BUTTON_ZR;
+        if (state.pressed(GAMEPAD_RCLICK)) output.buttons |= BUTTON_RCLICK;
+        if (state.pressed(GAMEPAD_START)) output.buttons |= BUTTON_PLUS;
+        if (state.pressed(GAMEPAD_GUIDE)) output.buttons |= BUTTON_HOME;
+        output.joystick = JoystickPosition(state.right_x, state.right_y);
+    }
+    return output;
+}
+
+JoyconState merged_joycon_state(const JoyconState& keyboard, const JoyconState& gamepad){
+    JoyconState state;
+    state.buttons = keyboard.buttons | gamepad.buttons;
+    state.joystick = gamepad.joystick.is_neutral() ? keyboard.joystick : gamepad.joystick;
+    return state;
+}
+
+}
 
 
 
@@ -67,27 +109,25 @@ JoyconController::~JoyconController(){
 
 
 void JoyconController::run_controller_input(const ControllerInputState& state){
-
-    if (state.type() != ControllerInputType::HID_Keyboard){
+    if (state.type() == ControllerInputType::HID_Keyboard){
+        JoyconDeltas deltas;
+        const KeyboardInputState& lstate = static_cast<const KeyboardInputState&>(state);
+        const std::map<KeyboardKey, JoyconDeltas>& map = m_data->m_keyboard_mapping;
+        for (KeyboardKey key : lstate.keys()){
+            auto iter = map.find(key);
+            if (iter != map.end()){
+                deltas += iter->second;
+            }
+        }
+        deltas.to_state(m_data->m_keyboard_state);
+    }else if (state.type() == ControllerInputType::StandardGamepad){
+        const GamepadInputState& gamepad = static_cast<const GamepadInputState&>(state);
+        m_data->m_gamepad_state = gamepad_joycon_state(gamepad, controller_class());
+    }else{
         return;
     }
 
-    JoyconDeltas deltas;
-
-    const KeyboardInputState& lstate = static_cast<const KeyboardInputState&>(state);
-    const std::map<KeyboardKey, JoyconDeltas>& map = m_data->m_keyboard_mapping;
-
-//    cout << "keys() = " << lstate.keys().size() << endl;
-
-    for (KeyboardKey key : lstate.keys()){
-        auto iter = map.find(key);
-        if (iter != map.end()){
-            deltas += iter->second;
-        }
-    }
-
-    JoyconState controller_state;
-    deltas.to_state(controller_state);
+    JoyconState controller_state = merged_joycon_state(m_data->m_keyboard_state, m_data->m_gamepad_state);
 
     WallClock timestamp;
     if (controller_state.is_neutral()){
