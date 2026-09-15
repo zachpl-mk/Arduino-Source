@@ -18,6 +18,8 @@ class QPushButton;
 
 namespace PokemonAutomation{
 
+class ProgramSession;
+
 
 
 
@@ -45,6 +47,8 @@ public:
 public slots:
     void set_stats(std::string current_stats, std::string historical_stats);
 };
+
+QWidget* make_edit_stats_button(QWidget& parent, ProgramSession& session);
 
 
 

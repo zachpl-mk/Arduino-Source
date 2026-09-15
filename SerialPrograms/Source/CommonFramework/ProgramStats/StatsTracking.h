@@ -35,6 +35,7 @@ public:
     virtual std::string to_str(PrintMode mode) const;
 
     void parse_and_append_line(const std::string& line);
+    void overwrite_from_string(const std::string& line);
 
 
 protected:

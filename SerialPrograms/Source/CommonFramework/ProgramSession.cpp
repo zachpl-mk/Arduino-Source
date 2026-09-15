@@ -71,6 +71,43 @@ std::string ProgramSession::historical_stats() const{
     }
     return "";
 }
+std::string ProgramSession::current_stats_for_editing() const{
+    std::lock_guard<Mutex> lg(m_lock);
+    return m_current_stats ? m_current_stats->to_str(StatsTracker::DUMP) : "";
+}
+std::string ProgramSession::historical_stats_for_editing() const{
+    std::lock_guard<Mutex> lg(m_lock);
+    return m_historical_stats ? m_historical_stats->to_str(StatsTracker::DUMP) : "";
+}
+bool ProgramSession::edit_current_stats(const std::string& stats){
+    std::lock_guard<Mutex> lg(m_lock);
+    if (!m_current_stats){
+        return false;
+    }
+    m_current_stats->overwrite_from_string(stats);
+    push_stats();
+    return true;
+}
+bool ProgramSession::edit_historical_stats(const std::string& stats){
+    std::lock_guard<Mutex> lg(m_lock);
+    if (!m_historical_stats){
+        return false;
+    }
+
+    const std::string old_stats = m_historical_stats->to_str(StatsTracker::DUMP);
+    m_historical_stats->overwrite_from_string(stats);
+    if (!StatSet::replace_program_stats(
+        GlobalSettings::instance().STATS_FILE,
+        m_descriptor.identifier(),
+        *m_historical_stats
+    )){
+        m_historical_stats->overwrite_from_string(old_stats);
+        return false;
+    }
+
+    push_stats();
+    return true;
+}
 WallClock ProgramSession::timestamp() const{
     return m_timestamp.load(std::memory_order_relaxed);
 }

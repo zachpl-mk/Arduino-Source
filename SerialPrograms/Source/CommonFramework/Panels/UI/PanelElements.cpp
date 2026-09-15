@@ -5,10 +5,12 @@
  */
 
 #include <QMessageBox>
+#include <QInputDialog>
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QPushButton>
 #include "CommonFramework/Globals.h"
+#include "CommonFramework/ProgramSession.h"
 #include "Common/Cpp/ColoredText.h"
 #include "PanelElements.h"
 
@@ -134,6 +136,53 @@ void StatsBar::set_stats(std::string current_stats, std::string historical_stats
 
     this->setText(QString::fromStdString(str));
     this->setVisible(true);
+}
+
+QWidget* make_edit_stats_button(QWidget& parent, ProgramSession& session){
+    QPushButton* button = new QPushButton("Edit Stats...", &parent);
+    QObject::connect(button, &QPushButton::clicked, &parent, [&parent, &session]{
+        bool ok = false;
+        const QString choice = QInputDialog::getItem(
+            &parent,
+            "Edit Stats",
+            "Stats to edit:",
+            {"Current Run", "Past Totals"},
+            0,
+            false,
+            &ok
+        );
+        if (!ok){
+            return;
+        }
+
+        const bool current = choice == "Current Run";
+        const std::string existing = current
+            ? session.current_stats_for_editing()
+            : session.historical_stats_for_editing();
+        if (current && existing.empty()){
+            QMessageBox::information(&parent, "Edit Stats", "There is no active run to edit.");
+            return;
+        }
+
+        const QString edited = QInputDialog::getMultiLineText(
+            &parent,
+            current ? "Edit Current Run Stats" : "Edit Past Totals",
+            "Edit values using the existing 'Name: value - Name: value' format:",
+            QString::fromStdString(existing),
+            &ok
+        );
+        if (!ok){
+            return;
+        }
+
+        const bool saved = current
+            ? session.edit_current_stats(edited.toStdString())
+            : session.edit_historical_stats(edited.toStdString());
+        if (!saved){
+            QMessageBox::critical(&parent, "Edit Stats", "Unable to save the edited stats.");
+        }
+    });
+    return button;
 }
 
 

@@ -38,6 +38,7 @@ public:
     const std::vector<StatLine>& list() const{ return m_list; }
 
     void aggregate(StatsTracker& tracker) const;
+    void replace_with(StatsTracker& tracker);
 
 private:
     std::vector<StatLine> m_list;
@@ -57,6 +58,11 @@ public:
     void open_from_file(const std::string& filepath);
 
     static bool update_file(
+        const std::string& filepath,
+        const std::string& identifier,
+        StatsTracker& tracker
+    );
+    static bool replace_program_stats(
         const std::string& filepath,
         const std::string& identifier,
         StatsTracker& tracker

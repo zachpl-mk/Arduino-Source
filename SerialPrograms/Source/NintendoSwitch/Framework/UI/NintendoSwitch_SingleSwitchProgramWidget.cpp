@@ -98,6 +98,7 @@ SingleSwitchProgramWidget2::SingleSwitchProgramWidget2(
     m_stats_bar = new StatsBar(*this);
     m_stats_bar->set_stats("", m_session.historical_stats());
     m_layout->addWidget(m_stats_bar);
+    m_layout->addWidget(make_edit_stats_button(*this, m_session));
 
     m_actions_bar = new RunnablePanelActionBar(*this, m_session.current_state());
     m_layout->addWidget(m_actions_bar);

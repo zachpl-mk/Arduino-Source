@@ -89,6 +89,10 @@ public:
     virtual ProgramState current_state() const override final{ return m_state.load(std::memory_order_relaxed); }
     virtual std::string current_stats() const override final;
     std::string historical_stats() const;
+    std::string current_stats_for_editing() const;
+    std::string historical_stats_for_editing() const;
+    bool edit_current_stats(const std::string& stats);
+    bool edit_historical_stats(const std::string& stats);
     virtual WallClock timestamp() const final;
 
     //  Temporary for migration.

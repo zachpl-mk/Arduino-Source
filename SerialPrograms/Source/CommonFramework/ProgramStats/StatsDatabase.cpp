@@ -102,6 +102,10 @@ void StatList::aggregate(StatsTracker& tracker) const{
 //        cout << tracker.to_str() << endl;
     }
 }
+void StatList::replace_with(StatsTracker& tracker){
+    m_list.clear();
+    m_list.emplace_back(tracker);
+}
 
 
 
@@ -172,6 +176,30 @@ bool StatSet::update_file(
     file.write(data.c_str(), data.size());
     file.resize(data.size());
 
+    return true;
+}
+
+bool StatSet::replace_program_stats(
+    const std::string& filepath,
+    const std::string& identifier,
+    StatsTracker& tracker
+){
+    QFile file(QString::fromStdString(filepath));
+    if (!file.open(QIODevice::ReadWrite)){
+        return false;
+    }
+
+    std::string data = file.readAll().data();
+    StatSet set;
+    set.load_from_string(data.c_str());
+    set[identifier].replace_with(tracker);
+
+    data = set.to_str();
+    file.seek(0);
+    if (file.write(data.c_str(), data.size()) != (qint64)data.size()){
+        return false;
+    }
+    file.resize(data.size());
     return true;
 }
 

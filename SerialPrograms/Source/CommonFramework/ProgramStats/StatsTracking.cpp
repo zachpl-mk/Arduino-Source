@@ -125,6 +125,13 @@ void StatsTracker::parse_and_append_line(const std::string& line){
     }
 }
 
+void StatsTracker::overwrite_from_string(const std::string& line){
+    for (auto& item : m_stats){
+        item.second.store(0, std::memory_order_relaxed);
+    }
+    parse_and_append_line(line);
+}
+
 
 
 std::string stats_to_bar(
